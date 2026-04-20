@@ -1,10 +1,101 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { View, Text, ScrollView, Image, Dimensions, TouchableOpacity, ActivityIndicator } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Header from '@/components/Header'
+import { BANNERS, dummyProducts } from '@/assets/assets'
+import { useRouter } from 'expo-router'
+import { CATEGORIES } from '@/constants'
+import CategoryItem from '@/components/CategoryItem'
+import { Product } from '@/constants/types'
+import ProductCard from '@/components/ProductCard'
+const {width} = Dimensions.get('window')
 
 export default function Home() {
+  const router = useRouter(); 
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const categories = [{id:'all',name:'All',icon: "grid"},...CATEGORIES]
+
+  const fetchProducts = async ()=>{
+    setProducts(dummyProducts);
+    setLoading(false)
+  }
+
+  useEffect(()=>{
+    fetchProducts()
+  },[]) 
+
   return (
-    <View>
-      <Text>Home</Text>
-    </View>
+    <SafeAreaView className='flex-1' edges={['top']}>
+      <Header title="Forever" showBack={false} showSearch={true} showCart={true} showMenu={true} showLogo={true} />  
+
+      <ScrollView className='flex-1 px-4' showsVerticalScrollIndicator={false}>
+      {/* Banner Section */}
+      <View className='mb-6'>
+      <ScrollView horizontal pagingEnabled 
+      showsHorizontalScrollIndicator={false} className='w-full h-48 rounded-xl' 
+      scrollEventThrottle={16} onScroll={(e)=>{
+        const slide = Math.ceil(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width)
+        if(slide !== activeIndex){
+          setActiveIndex(slide)
+        }
+      }}>
+        {BANNERS.map((banner,index)=>(
+          <View key={index} className='relative w-full h-48 bg-gray-200 overflow-hidden rounded-xl' style={{width:width-32}}>
+            <Image source={{uri:banner.image}} resizeMode='cover' className='w-full h-full' />
+            
+            <View className='absolute left-4 bottom-4 z-10'>
+              <Text className='text-white text-2xl font-bold'>{banner.title}</Text>
+              <Text className='text-white text-sm font-medium'>{banner.subtitle}</Text>
+              <TouchableOpacity className='bg-white px-4 py-2 rounded-full mt-2'>
+                <Text className='text-primary font-bold'>Get Now</Text>
+              </TouchableOpacity>
+            </View>
+            <View className='absolute inset-0 bg-black/40'/>
+          </View>
+        ))}
+      </ScrollView>
+        {/* Pagination Dots */}
+        <View className='flex-row justify-center items-center mt-2 gap-2'>
+          {BANNERS.map((_,index)=>(<View key={index} className={`h-2 rounded-full ${index === activeIndex ? 'w-6 bg-primary' : 'w-2 bg-gray-300'}`}/>))}
+        </View>
+      </View>
+
+      {/* Categories Section */}
+      <View className='mb-6'>
+        <Text className='text-2xl font-bold'>Categories</Text>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {categories.map((cat: any)=>(
+          <CategoryItem key={cat.id} item={cat} isSelected={false} 
+          onPress={()=>router.push({pathname:"/shop", params: {category: cat.id === "all" ? "": cat.name}})}/>
+        ))}
+      </ScrollView>
+
+        <View className='mb-8'>
+          <View className='flex-row justify-between items-center mb-4'>
+            <Text>Popular</Text>
+              <TouchableOpacity onPress={()=> router.push('./shop')}>
+                <Text>See All</Text>
+              </TouchableOpacity>
+          </View>
+          {loading ? (
+            <ActivityIndicator size='large'/>
+          ):(
+            <View className='flex-row flex-wrap justify-between'>
+              {products.slice(0,4).map((product)=>(
+                <ProductCard key={product._id} product={product}/>
+              ))}
+            </View>
+          )}
+        </View>
+
+        
+
+      </ScrollView>
+    </SafeAreaView>
+      
   )
 }
