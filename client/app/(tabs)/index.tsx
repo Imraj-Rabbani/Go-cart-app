@@ -29,7 +29,7 @@ export default function Home() {
 
   return (
     <SafeAreaView className='flex-1' edges={['top']}>
-      <Header title="Forever" showBack={false} showSearch={true} showCart={true} showMenu={true} showLogo={true} />  
+      <Header title="Gocart" showBack={false} showSearch={true} showCart={true} showMenu={true} showLogo={true} />  
 
       <ScrollView className='flex-1 px-4' showsVerticalScrollIndicator={false}>
       {/* Banner Section */}
