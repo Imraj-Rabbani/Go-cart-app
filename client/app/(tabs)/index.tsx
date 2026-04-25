@@ -8,6 +8,8 @@ import { CATEGORIES } from '@/constants'
 import CategoryItem from '@/components/CategoryItem'
 import { Product } from '@/constants/types'
 import ProductCard from '@/components/ProductCard'
+import api from '@/constants/api'
+import Toast from 'react-native-toast-message'
 const {width} = Dimensions.get('window')
 
 export default function Home() {
@@ -19,8 +21,21 @@ export default function Home() {
   const categories = [{id:'all',name:'All',icon: "grid"},...CATEGORIES]
 
   const fetchProducts = async ()=>{
-    setProducts(dummyProducts);
-    setLoading(false)
+    try{
+      const {data} = await api.get('/products')
+      if(data.success){
+        setProducts(data.data)
+      }
+    }catch(error:any){
+      console.error('Failed to fetch products:', error)
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to fetch products',
+        text2: error.response?.data?.message || 'Something went wrong'
+      })
+    }finally{
+      setLoading(false)
+    }
   }
 
   useEffect(()=>{

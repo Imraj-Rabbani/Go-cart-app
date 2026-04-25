@@ -11,6 +11,7 @@ import { COLORS } from '@/constants'
 import { Dimensions, Image } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import Toast from 'react-native-toast-message'
+import api from '@/constants/api'
 
 const { width } = Dimensions.get('window');
 
@@ -26,9 +27,16 @@ const ProductDetail = () => {
     const [activeImageIndex, setActiveImageIndex] = useState(0);
 
     const fetchProduct = async () => {
-        const found: any = dummyProducts.find((product) => product._id === id);
-        setProduct(found ?? null);
-        setLoading(false);
+        try{
+            const {data} = await api.get(`/products/${id}`)
+            setProduct(data.data)
+            setLoading(false)
+        }catch(error){
+            console.error("Error fetching product:", error)
+            setLoading(false)
+        }finally{
+            setLoading(false)
+        }
     }
 
     useEffect(() => {

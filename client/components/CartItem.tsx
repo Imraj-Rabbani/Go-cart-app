@@ -6,7 +6,8 @@ import { COLORS } from '@/constants'
 
 export default function CartItem({ item, onRemove, onUpdateQuantity }: CartItemProps) {
 
-    const imageUrl = item.product.images[0]
+    if (!item || !item.product) return null;
+    const imageUrl = item.product.images[0]??"https://res.cloudinary.com/ddvhwqbd3/image/upload/v1777126017/gocart/products/ehobvl1cy5y3zxhsw3cf.jpg";
 
     return (
         <View className='flex-row mb-4 bg-white p-3 rounded-xl'>
@@ -21,7 +22,7 @@ export default function CartItem({ item, onRemove, onUpdateQuantity }: CartItemP
                         <Text className='text-primary font-medium text-sm mb-1'>{item.product.name}</Text>
                         <Text className='text-secondary text-xs'>Size: {item.size}</Text>
                     </View>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={onRemove}>
                         <Ionicons name='close-circle-outline' size={20} color="#FF4C3B" />
                     </TouchableOpacity>
                 </View>

@@ -43,13 +43,16 @@ export type ProductCardProps = {
 };
 
 export interface CartItem {
+    id: string;
+    productId: string;
     product: Product;
     quantity: number;
     size: string;
+    price: number;
 }
 
 export type CartItemProps = {
-    item: { id: string; product: { name: string; price: number; images: string[] }; quantity: number; size: string };
+    item: CartItem;
     onRemove?: () => void;
     onUpdateQuantity?: (newQty: number) => void;
 };

@@ -1,13 +1,13 @@
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { Product } from '@/constants/types';
-import { dummyProducts } from '@/assets/assets';
+import { Product } from '@/constants/types'; 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants';
 import { FlatList, TextInput } from 'react-native-gesture-handler';
 import ProductCard from '@/components/ProductCard';
 import Header from '@/components/Header'
+import api from '@/constants/api';
 
 export default function Shop() {
 
@@ -33,15 +33,14 @@ export default function Shop() {
         }
 
         try {
-            const start = (pageNumber - 1) * 10;
-            const end = start + 10
-            const paginatedData = dummyProducts.slice(start, end)
-            if (pageNumber === 1) {
-                setProducts(paginatedData)
-            } else {
-                setProducts(prev => [...prev, ...paginatedData])
+            const queryParams: any = {page: pageNumber, limit: 10}
+            const {data} = await api.get('/products', {params: queryParams})
+            if(pageNumber===1){
+                setProducts(data.data)
+            }else{
+                setProducts(prev=> [...prev, ...data.data])
             }
-            setHasMore(end < dummyProducts.length)
+            setHasMore(data.pagination.page<data.pagination.pages)
             setPage(pageNumber)
 
         } catch (error) {
