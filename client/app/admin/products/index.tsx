@@ -4,17 +4,35 @@ import { ScrollView, Text, TouchableOpacity, View, ActivityIndicator, RefreshCon
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants";
 import { dummyProducts } from "@/assets/assets";
+import { useAuth } from "@clerk/clerk-expo";
+import api from "@/constants/api";
+import Toast from "react-native-toast-message";
 
 export default function AdminProducts() {
     const router = useRouter();
+    const {getToken} = useAuth()
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [products, setProducts] = useState([]);
 
     const fetchProducts = async () => {
-        setProducts(dummyProducts as any);
-        setLoading(false);
-        setRefreshing(false);
+        try {
+           const {data} = await api.get('/products', {params: {limit: 999}})
+
+           if(data.success){
+            setProducts(data.data)
+           }
+
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: error.response.data.message,
+                text2: "Failed to fetch products"
+            })
+        }finally{
+            setLoading(false);
+            setRefreshing(false);
+        }
     };
 
     useEffect(() => {
@@ -27,7 +45,23 @@ export default function AdminProducts() {
     };
 
     const performDelete = async (id: string) => {
-        setProducts(products.filter((product: any) => product._id !== id) as any);
+        try {
+            const token = await getToken()
+            const {data } = await api.delete('/products/' + id, {headers: {Authorization: `Bearer ${token}`}})
+
+            if(data.success){
+                Toast.show({
+                    type: 'success',
+                    text1: 'Product deleted successfully'
+                })
+            }
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: error.response.data.message,
+                text2: "Failed to delete product"
+            })
+        }
     };
 
     const deleteProduct = async (id: string) => {
