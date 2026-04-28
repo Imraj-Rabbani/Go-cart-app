@@ -106,6 +106,11 @@ export default function AdminStoresScreen() {
                             </View>
                         </View>
                         <Text className="text-secondary text-sm mb-3">{new Date(store.createdAt).toLocaleDateString()}</Text>
+                        <View className="bg-surface rounded-xl p-3 mb-3">
+                            <Text className="text-secondary text-xs uppercase font-medium mb-1">Royalty Revenue</Text>
+                            <Text className="text-primary font-bold text-lg">${Number(store.revenue || 0).toFixed(2)}</Text>
+                            <Text className="text-secondary text-sm mt-1">Orders: {store.totalOrders || 0} • Rate: {Math.round((store.royaltyRate || 0.05) * 100)}%</Text>
+                        </View>
                         {store.status === "pending" ? (
                             <View className="flex-row">
                                 <TouchableOpacity className="bg-primary px-4 py-3 rounded-xl mr-2 flex-1 items-center" onPress={() => approveStore(store._id)}>

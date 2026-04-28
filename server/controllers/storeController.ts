@@ -3,6 +3,9 @@ import { clerkClient } from "@clerk/express";
 import cloudinary from "../config/cloudinary.js";
 import Store from "../models/Store.js";
 import User from "../models/User.js";
+import Design from "../models/Design.js";
+import { calculateStoreRevenue } from "../utils/storeRevenue.js";
+import { publishDesignProduct } from "../utils/publishDesignProduct.js";
 
 const uploadSingleFile = (file: Express.Multer.File, folder: string) => {
     return new Promise<string>((resolve, reject) => {
@@ -22,7 +25,24 @@ export const applyForStore = async (req: Request, res: Response) => {
     try {
         const existingStore = await Store.findOne({ owner: req.user._id });
         if (existingStore) {
-            return res.status(400).json({ success: false, message: "You already have a store application" });
+            if (existingStore.status !== "rejected") {
+                return res.status(400).json({ success: false, message: "You already have a store application" });
+            }
+
+            const { name, description } = req.body;
+            let logo = existingStore.logo || "";
+            if (req.file) {
+                logo = await uploadSingleFile(req.file, "gocart/stores");
+            }
+
+            existingStore.name = name || existingStore.name;
+            existingStore.description = description;
+            existingStore.logo = logo;
+            existingStore.status = "pending";
+            existingStore.rejectionReason = undefined;
+            await existingStore.save();
+
+            return res.status(200).json({ success: true, data: existingStore });
         }
 
         const { name, description } = req.body;
@@ -76,9 +96,21 @@ export const getAdminStores = async (req: Request, res: Response) => {
             .skip((Number(page) - 1) * Number(limit))
             .limit(Number(limit));
 
+        const enrichedStores = await Promise.all(stores.map(async (store) => {
+            const { totalRevenue, totalOrders } = await calculateStoreRevenue(store._id);
+            await store.updateOne({ revenue: totalRevenue, totalOrders });
+
+            return {
+                ...store.toObject(),
+                revenue: totalRevenue,
+                totalOrders,
+                royaltyRate: 0.05,
+            };
+        }));
+
         res.json({
             success: true,
-            data: stores,
+            data: enrichedStores,
             pagination: {
                 total,
                 page: Number(page),
@@ -106,6 +138,13 @@ export const approveStore = async (req: Request, res: Response) => {
             await clerkClient.users.updateUser(owner.clerkId, {
                 publicMetadata: { role: "store_owner" },
             });
+        }
+
+        const pendingDesigns = await Design.find({ store: store._id });
+        for (const design of pendingDesigns) {
+            if (!design.product) {
+                await publishDesignProduct(design, store);
+            }
         }
 
         const updatedStore = await Store.findById(store._id).populate("owner", "name email");

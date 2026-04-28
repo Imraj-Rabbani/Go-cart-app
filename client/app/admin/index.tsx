@@ -76,7 +76,6 @@ export default function AdminDashboard() {
                     <NavCard label="Manage Products" onPress={() => router.push("/admin/products")} />
                     <NavCard label="Manage Orders" onPress={() => router.push("/admin/orders")} />
                     <NavCard label="Manage Stores" onPress={() => router.push("/admin/stores")} />
-                    <NavCard label="Designs" onPress={() => router.push("/admin/designs")} />
                 </View>
             </View>
 

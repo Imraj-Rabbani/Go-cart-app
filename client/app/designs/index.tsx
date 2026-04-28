@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
@@ -8,6 +8,7 @@ import { COLORS, getDesignStatusColor } from "@/constants";
 import type { Design } from "@/constants/types";
 import Header from '@/components/Header'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import MockupPreview from "@/components/MockupPreview";
 
 export default function MyDesignsScreen() {
     const router = useRouter();
@@ -34,19 +35,6 @@ export default function MyDesignsScreen() {
     useEffect(() => {
         fetchDesigns();
     }, []);
-
-    const submitDesign = async (designId: string) => {
-        try {
-            const token = await getToken();
-            await api.patch(`/designs/${designId}/submit`, {}, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            Toast.show({ type: "success", text1: "Design submitted for production" });
-            fetchDesigns();
-        } catch (error: any) {
-            Toast.show({ type: "error", text1: error.response?.data?.message || "Failed to submit design" });
-        }
-    };
 
     const removeDesign = (designId: string) => {
         Alert.alert("Delete Design", "Are you sure you want to delete this draft design?", [
@@ -94,11 +82,18 @@ export default function MyDesignsScreen() {
                 ) : (
                     designs.map((design) => (
                         <View key={design._id} className="bg-white p-4 rounded-2xl border border-gray-100 mb-4">
-                            <Image source={{ uri: design.artworkUrl }} className="w-full h-52 rounded-2xl bg-gray-100 mb-4" resizeMode="cover" />
+                            <MockupPreview
+                                productType={design.productType}
+                                color={design.color}
+                                artworkUrl={design.artworkUrl}
+                                placement={design.placement}
+                                className="w-full h-52 rounded-2xl mb-4"
+                            />
                             <View className="flex-row justify-between items-start mb-2">
                                 <View className="flex-1 mr-3">
                                     <Text className="text-primary font-bold text-lg">{design.title}</Text>
                                     <Text className="text-secondary capitalize">{design.productType}</Text>
+                                    <Text className="text-secondary text-sm mt-1">${design.price.toFixed(2)} • Stock {design.stock}</Text>
                                 </View>
                                 <View className={`px-3 py-1.5 rounded-full ${getDesignStatusColor(design.status)}`}>
                                     <Text className="text-xs font-bold uppercase text-primary">{design.status.replace("_", " ")}</Text>
@@ -106,9 +101,6 @@ export default function MyDesignsScreen() {
                             </View>
                             {design.status === "draft" ? (
                                 <View className="flex-row mt-2">
-                                    <TouchableOpacity className="bg-primary py-3 rounded-xl items-center flex-1 mr-2" onPress={() => submitDesign(design._id)}>
-                                        <Text className="text-white font-bold">Submit for Production</Text>
-                                    </TouchableOpacity>
                                     <TouchableOpacity className="bg-red-50 py-3 rounded-xl items-center flex-1" onPress={() => removeDesign(design._id)}>
                                         <Text className="text-red-600 font-bold">Delete</Text>
                                     </TouchableOpacity>

@@ -64,6 +64,19 @@ export interface IOrder extends Document {
 
 export interface IProduct extends Document {
     store?: Types.ObjectId | null;
+    sourceDesign?: Types.ObjectId | null;
+    royaltyRate?: number;
+    design?: {
+        artworkUrl: string;
+        previewUrl?: string;
+        productType: "t-shirt" | "hoodie" | "mug" | "tote-bag" | "phone-case";
+        color: string;
+        placement: {
+            x: number;
+            y: number;
+            scale: number;
+        };
+    };
     name: string;
     description: string;
     price: number;
@@ -113,10 +126,23 @@ export interface IStore extends Document {
 
 export interface IDesign extends Document {
     user: Types.ObjectId;
+    store: Types.ObjectId;
+    product?: Types.ObjectId | null;
     productType: "t-shirt" | "hoodie" | "mug" | "tote-bag" | "phone-case";
+    color: string;
+    category: "Men" | "Women" | "Kids" | "Accessories";
+    description?: string;
+    price: number;
+    stock: number;
+    sizes: string[];
     artworkUrl: string;
     artworkPublicId: string;
     previewUrl?: string;
+    placement: {
+        x: number;
+        y: number;
+        scale: number;
+    };
     title: string;
     status: "draft" | "submitted" | "in_production" | "completed";
     createdAt: Date;

@@ -47,12 +47,16 @@ export default function StoreOwnerRevenueScreen() {
     return (
         <ScrollView className="flex-1 bg-surface p-4">
             <View className="bg-white p-5 rounded-2xl border border-gray-100 mb-4">
-                <Text className="text-secondary text-xs uppercase font-medium mb-2">Total Revenue</Text>
+                <Text className="text-secondary text-xs uppercase font-medium mb-2">Total Royalty Revenue</Text>
                 <Text className="text-primary text-3xl font-bold">${revenue.totalRevenue.toFixed(2)}</Text>
             </View>
             <View className="bg-white p-5 rounded-2xl border border-gray-100 mb-4">
                 <Text className="text-secondary text-xs uppercase font-medium mb-2">Total Orders</Text>
                 <Text className="text-primary text-3xl font-bold">{revenue.totalOrders}</Text>
+            </View>
+            <View className="bg-white p-5 rounded-2xl border border-gray-100 mb-4">
+                <Text className="text-secondary text-xs uppercase font-medium mb-2">Royalty Rate</Text>
+                <Text className="text-primary text-3xl font-bold">{Math.round(((revenue as any).royaltyRate || 0.05) * 100)}%</Text>
             </View>
             <View className="bg-white p-5 rounded-2xl border border-gray-100">
                 <Text className="text-primary text-xl font-bold mb-4">Last 6 Months</Text>

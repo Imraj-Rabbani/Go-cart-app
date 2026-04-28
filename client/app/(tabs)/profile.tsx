@@ -1,17 +1,40 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'expo-router'
 import Header from '@/components/Header'
 import { ScrollView } from 'react-native-gesture-handler'
 import { COLORS, PROFILE_MENU } from '@/constants'
 import { Ionicons } from '@expo/vector-icons'
 import { useUser, useAuth } from '@clerk/clerk-expo'
+import api from '@/constants/api'
 
 export default function Profile() {
   const { user } = useUser()
-  const { signOut } = useAuth()
+  const { signOut, getToken } = useAuth()
   const router = useRouter()
+  const [hasStore, setHasStore] = useState(false)
+
+  useEffect(() => {
+    const fetchStore = async () => {
+      if (!user) {
+        setHasStore(false)
+        return
+      }
+
+      try {
+        const token = await getToken()
+        const { data } = await api.get('/stores/my', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setHasStore(!!data.data)
+      } catch {
+        setHasStore(false)
+      }
+    }
+
+    fetchStore()
+  }, [getToken, user])
 
   const handleLogout = async () => {
     await signOut()
@@ -60,19 +83,15 @@ export default function Profile() {
               </Text>
 
               <View className='w-full mt-4'>
-                {user.publicMetadata?.role === 'user' && (
+                {hasStore ? (
+                  <TouchableOpacity className='bg-primary py-3 px-6 rounded-full mb-3' onPress={() => router.push('/store-owner')}>
+                    <Text className='text-white font-bold text-center'>View Store</Text>
+                  </TouchableOpacity>
+                ) : (
                   <TouchableOpacity className='bg-primary py-3 px-6 rounded-full mb-3' onPress={() => router.push('/store-owner/apply')}>
-                    <Text className='text-white font-bold text-center'>Become a Seller</Text>
+                    <Text className='text-white font-bold text-center'>Create Store</Text>
                   </TouchableOpacity>
                 )}
-                {(user.publicMetadata?.role === 'store_owner' || user.publicMetadata?.role === 'user') && (
-                  <TouchableOpacity className='bg-white py-3 px-6 rounded-full mb-3 border border-gray-200' onPress={() => router.push('/store-owner')}>
-                    <Text className='text-primary font-bold text-center'>My Store</Text>
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity className='bg-white py-3 px-6 rounded-full mb-3 border border-gray-200' onPress={() => router.push('/designs')}>
-                  <Text className='text-primary font-bold text-center'>My Designs</Text>
-                </TouchableOpacity>
                 {user.publicMetadata?.role === 'admin' && (
                   <TouchableOpacity className='bg-primary py-3 px-6 rounded-full' onPress={() => router.push('/admin')}>
                     <Text className='text-white font-bold text-center'>Admin Panel</Text>

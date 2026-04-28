@@ -12,6 +12,7 @@ import { Dimensions, Image } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import Toast from 'react-native-toast-message'
 import api from '@/constants/api'
+import MockupPreview from '@/components/MockupPreview'
 
 const { width } = Dimensions.get('window');
 
@@ -84,12 +85,24 @@ const ProductDetail = () => {
                             setActiveImageIndex(slide);
                         }}>
                         {product.images?.map((img, index) => (
-                            <Image
-                                key={index}
-                                source={{ uri: img }}
-                                style={{ width: width, height: 500, }}
-                                resizeMode='cover'
-                            />
+                            product.design ? (
+                                <View key={index} style={{ width, height: 500 }}>
+                                    <MockupPreview
+                                        productType={product.design.productType}
+                                        color={product.design.color}
+                                        artworkUrl={product.design.artworkUrl}
+                                        placement={product.design.placement}
+                                        className="w-full h-full"
+                                    />
+                                </View>
+                            ) : (
+                                <Image
+                                    key={index}
+                                    source={{ uri: img }}
+                                    style={{ width: width, height: 500, }}
+                                    resizeMode='cover'
+                                />
+                            )
                         ))}
                     </ScrollView>
                     <View className='absolute top-12 left-4 right-4 flex-row justify-between items-center z-10'>
