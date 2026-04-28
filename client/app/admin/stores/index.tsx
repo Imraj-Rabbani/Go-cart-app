@@ -18,6 +18,7 @@ export default function AdminStoresScreen() {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedStoreId, setSelectedStoreId] = useState("");
     const [rejectionReason, setRejectionReason] = useState("");
+    const [dropdownVisible, setDropdownVisible] = useState(false);
 
     const fetchStores = async (status = selectedFilter) => {
         try {
@@ -75,20 +76,46 @@ export default function AdminStoresScreen() {
 
     if (!isAllowed) return null;
 
+    const getFilterLabel = (filter: string) => {
+        return filter.charAt(0).toUpperCase() + filter.slice(1);
+    };
+
     return (
         <View className="flex-1 bg-surface">
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                className="px-4 py-3 bg-white border-b border-gray-100"
-                contentContainerStyle={{ gap: 8 }}
-            >
-                {FILTERS.map((filter) => (
-                    <TouchableOpacity key={filter} className={`px-4 py-2 rounded-full ${selectedFilter === filter ? "bg-primary" : "bg-surface"}`} onPress={() => setSelectedFilter(filter)}>
-                        <Text className={selectedFilter === filter ? "text-white font-semibold capitalize" : "text-primary font-medium capitalize"}>{filter}</Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
+            {/* Dropdown Filter */}
+            <View className="px-4 py-3 bg-white border-b border-gray-100">
+                <TouchableOpacity 
+                    className="flex-row justify-between items-center bg-surface px-4 py-3 rounded-xl border border-gray-200"
+                    onPress={() => setDropdownVisible(!dropdownVisible)}
+                >
+                    <Text className="text-primary font-medium">
+                        Filter: {getFilterLabel(selectedFilter)}
+                    </Text>
+                    <Text className="text-secondary text-lg">
+                        {dropdownVisible ? "▲" : "▼"}
+                    </Text>
+                </TouchableOpacity>
+
+                {dropdownVisible && (
+                    <View className="absolute top-[60px] left-4 right-4 bg-white rounded-xl border border-gray-200 shadow-lg z-10">
+                        {FILTERS.map((filter) => (
+                            <TouchableOpacity
+                                key={filter}
+                                className={`px-4 py-3 ${selectedFilter === filter ? "bg-primary/10" : ""} ${filter !== FILTERS[FILTERS.length - 1] ? "border-b border-gray-100" : ""}`}
+                                onPress={() => {
+                                    setSelectedFilter(filter);
+                                    setDropdownVisible(false);
+                                }}
+                            >
+                                <Text className={`capitalize ${selectedFilter === filter ? "text-primary font-bold" : "text-secondary"}`}>
+                                    {getFilterLabel(filter)}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
+            </View>
+
             <ScrollView className="flex-1 p-4" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
                 setRefreshing(true);
                 fetchStores();

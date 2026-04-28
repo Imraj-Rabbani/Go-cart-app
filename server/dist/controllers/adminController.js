@@ -1,0 +1,25 @@
+import User from "../models/User.js";
+import Product from "../models/Products.js";
+import Order from "../models/Orders.js";
+import Store from "../models/Store.js";
+export const getDashboardStats = async (req, res) => {
+    try {
+        const totalUsers = await User.countDocuments();
+        const totalProducts = await Product.countDocuments();
+        const totalOrders = await Order.countDocuments();
+        const totalStores = await Store.countDocuments({ status: "active" });
+        const pendingStoreRequests = await Store.countDocuments({ status: "pending" });
+        const validOrders = await Order.find({ orderStatus: { $ne: "cancelled" } });
+        const totalRevenue = validOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+        const recentOrders = await Order.find().sort("-createdAt").limit(5).populate("user", "name email");
+        res.json({
+            success: true,
+            data: {
+                totalUsers, totalProducts, totalOrders, totalRevenue, recentOrders, totalStores, pendingStoreRequests
+            }
+        });
+    }
+    catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

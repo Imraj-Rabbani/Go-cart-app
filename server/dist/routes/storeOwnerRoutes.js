@@ -1,0 +1,13 @@
+import express from "express";
+import upload from "../middleware/upload.js";
+import { authorize, protect } from "../middleware/auth.js";
+import { createStoreOwnerProduct, deleteStoreOwnerProduct, getStoreOwnerOrders, getStoreOwnerProducts, getStoreOwnerRevenue, updateStoreOwnerProduct, } from "../controllers/storeOwnerController.js";
+const StoreOwnerRouter = express.Router();
+StoreOwnerRouter.use(protect, authorize("store_owner"));
+StoreOwnerRouter.get("/products", getStoreOwnerProducts);
+StoreOwnerRouter.post("/products", upload.array("images", 5), createStoreOwnerProduct);
+StoreOwnerRouter.put("/products/:productId", upload.array("images", 5), updateStoreOwnerProduct);
+StoreOwnerRouter.delete("/products/:productId", deleteStoreOwnerProduct);
+StoreOwnerRouter.get("/orders", getStoreOwnerOrders);
+StoreOwnerRouter.get("/revenue", getStoreOwnerRevenue);
+export default StoreOwnerRouter;
