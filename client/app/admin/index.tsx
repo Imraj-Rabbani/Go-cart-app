@@ -1,8 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View, ActivityIndicator, RefreshControl } from "react-native";
+import { ScrollView, Text, View, ActivityIndicator, RefreshControl, TouchableOpacity } from "react-native";
 import { COLORS, getStatusColor } from "@/constants";
-import { dummyAdminStats } from "@/assets/assets";
 import { useAuth } from "@clerk/clerk-expo";
 import api from "@/constants/api";
 
@@ -17,6 +16,8 @@ export default function AdminDashboard() {
         totalProducts: 0,
         totalOrders: 0,
         totalRevenue: 0,
+        totalStores: 0,
+        pendingStoreRequests: 0,
         recentOrders: []
     });
 
@@ -64,6 +65,18 @@ export default function AdminDashboard() {
                     <StatCard label="Total Orders" value={stats.totalOrders.toString()} />
                     <StatCard label="Products" value={stats.totalProducts.toString()} />
                     <StatCard label="Users" value={stats.totalUsers.toString()} />
+                    <StatCard label="Active Stores" value={stats.totalStores.toString()} />
+                    <StatCard label="Pending Requests" value={stats.pendingStoreRequests.toString()} />
+                </View>
+            </View>
+
+            <View className="mb-8">
+                <Text className="text-primary font-bold text-2xl mb-4 tracking-tight">Quick Actions</Text>
+                <View className="flex-row flex-wrap justify-between">
+                    <NavCard label="Manage Products" onPress={() => router.push("/admin/products")} />
+                    <NavCard label="Manage Orders" onPress={() => router.push("/admin/orders")} />
+                    <NavCard label="Manage Stores" onPress={() => router.push("/admin/stores")} />
+                    <NavCard label="Designs" onPress={() => router.push("/admin/designs")} />
                 </View>
             </View>
 
@@ -117,4 +130,10 @@ const StatCard = ({ label, value }: { label: string, value: string }) => (
         <Text className="text-xl font-bold text-primary mb-1">{value}</Text>
         <Text className="text-secondary text-xs font-medium uppercase tracking-wide">{label}</Text>
     </View>
+);
+
+const NavCard = ({ label, onPress }: { label: string; onPress: () => void }) => (
+    <TouchableOpacity onPress={onPress} className="bg-white p-5 rounded-2xl border border-gray-100 w-[48%] mb-4">
+        <Text className="text-primary font-semibold">{label}</Text>
+    </TouchableOpacity>
 );

@@ -6,10 +6,9 @@ const userSchema = new mongoose.Schema<IUser>({
     email: { type: String, required: true, unique: true, trim: true },
     image: { type: String },
     clerkId: { type: String, sparse: true, unique: true },
-    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    role: { type: String, enum: ['user', 'admin', 'store_owner'], default: 'user' },
 }, { timestamps: true })
 
 const User = mongoose.model<IUser>('User', userSchema)
 
 export default User;
-

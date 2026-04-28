@@ -30,6 +30,7 @@ export interface ICart extends Document {
 
 export interface IOrderItem {
     product: Types.ObjectId;
+    store?: Types.ObjectId | null;
     name: string;
     quantity: number;
     price: number;
@@ -62,13 +63,14 @@ export interface IOrder extends Document {
 }
 
 export interface IProduct extends Document {
+    store?: Types.ObjectId | null;
     name: string;
     description: string;
     price: number;
     comparePrice?: number;
     images: string[];
     sizes: string[];
-    category: "Men" | "Women" | "Kids" | "Shoes" | "Bags" | "Other";
+    category: "Men" | "Women" | "Kids" | "Accessories";
     stock: number;
     ratings: {
         average: number;
@@ -85,7 +87,7 @@ export interface IUser extends Document {
     email: string;
     clerkId: string;
     image?: string;
-    role: "user" | "admin";
+    role: "user" | "admin" | "store_owner";
     createdAt: Date;
     updatedAt: Date;
 }
@@ -94,4 +96,29 @@ export interface IWishlist extends Document {
     user: Types.ObjectId;
     products: Types.ObjectId[];
     createdAt: Date;
+}
+
+export interface IStore extends Document {
+    owner: Types.ObjectId;
+    name: string;
+    description?: string;
+    logo?: string;
+    status: "pending" | "active" | "rejected";
+    rejectionReason?: string;
+    revenue: number;
+    totalOrders: number;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface IDesign extends Document {
+    user: Types.ObjectId;
+    productType: "t-shirt" | "hoodie" | "mug" | "tote-bag" | "phone-case";
+    artworkUrl: string;
+    artworkPublicId: string;
+    previewUrl?: string;
+    title: string;
+    status: "draft" | "submitted" | "in_production" | "completed";
+    createdAt: Date;
+    updatedAt: Date;
 }

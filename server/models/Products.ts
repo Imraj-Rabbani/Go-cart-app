@@ -2,12 +2,13 @@ import mongoose from "mongoose";
 import { IProduct } from "../types/index.js";
 
 const productSchema = new mongoose.Schema<IProduct>({
+    store: { type: mongoose.Schema.Types.ObjectId, ref: "Store", default: null },
     name: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
     price: { type: Number, required: true, min: 0 },
     images: { type: [String] },
     sizes: [{ type: String }],
-    category: { type: String, required: true, enum: ["Men", "Women", "Kids", "Accessories"], default: "Other" },
+    category: { type: String, required: true, enum: ["Men", "Women", "Kids", "Accessories"], default: "Accessories" },
     stock: { type: Number, required: true, min: 0, default: 0 },
     ratings: {
         average: { type: Number, default: 0, min: 0, max: 5 },

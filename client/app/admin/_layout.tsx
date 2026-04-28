@@ -77,6 +77,20 @@ export default function AdminLayout() {
                     )
                 }}
             />
+            <Tabs.Screen
+                name="stores"
+                options={{
+                    href: null,
+                    title: "Stores",
+                }}
+            />
+            <Tabs.Screen
+                name="designs"
+                options={{
+                    href: null,
+                    title: "Designs",
+                }}
+            />
         </Tabs>
     );
 }

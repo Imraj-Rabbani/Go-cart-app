@@ -10,6 +10,9 @@ import CartRouter from "./routes/cartRoutes.js"
 import OrderRouter from "./routes/ordersRoutes.js";
 import AddressRouter from "./routes/addressRoutes.js";
 import AdminRouter from "./routes/adminRoutes.js";
+import StoreRouter from "./routes/storeRoutes.js";
+import StoreOwnerRouter from "./routes/storeOwnerRoutes.js";
+import DesignRouter from "./routes/designRoutes.js";
 
 const app = express();
 
@@ -34,6 +37,9 @@ app.use("/api/cart", CartRouter)
 app.use("/api/orders", OrderRouter)
 app.use("/api/addresses", AddressRouter)
 app.use('/api/admin', AdminRouter)
+app.use("/api/stores", StoreRouter)
+app.use("/api/store-owner", StoreOwnerRouter)
+app.use("/api/designs", DesignRouter)
 
 
 await makeAdmin();

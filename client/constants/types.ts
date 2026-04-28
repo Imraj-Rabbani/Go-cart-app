@@ -2,7 +2,7 @@ export interface User {
     _id: string;
     name: string;
     email: string;
-    role: "user" | "admin";
+    role: "user" | "admin" | "store_owner";
     phone?: string;
     address?: {
         street: string;
@@ -16,18 +16,14 @@ export interface User {
 
 export interface Product {
     _id: string;
+    store?: Store | string | null;
     name: string;
     description: string;
     price: number;
     comparePrice?: number;
     images: string[];
     sizes?: string[];
-    category:
-        | {
-              _id: string;
-              name: string;
-          }
-        | string;
+    category: string;
     stock: number;
     ratings: {
         average: number;
@@ -86,6 +82,7 @@ export interface Address {
 
 export interface OrderItem {
     product: Product | string;
+    store?: Store | string;
     name: string;
     quantity: number;
     price: number;
@@ -123,3 +120,28 @@ export type WishlistContextType = {
     isInWishlist: (productId: string) => boolean;
     loading: boolean;
 };
+
+export interface Store {
+    _id: string;
+    owner: User | string;
+    name: string;
+    description?: string;
+    logo?: string;
+    status: "pending" | "active" | "rejected";
+    rejectionReason?: string;
+    revenue: number;
+    totalOrders: number;
+    createdAt: string;
+}
+
+export interface Design {
+    _id: string;
+    user: User | string;
+    productType: "t-shirt" | "hoodie" | "mug" | "tote-bag" | "phone-case";
+    artworkUrl: string;
+    artworkPublicId: string;
+    previewUrl?: string;
+    title: string;
+    status: "draft" | "submitted" | "in_production" | "completed";
+    createdAt: string;
+}

@@ -1,0 +1,155 @@
+import { Request, Response } from "express";
+import { clerkClient } from "@clerk/express";
+import cloudinary from "../config/cloudinary.js";
+import Store from "../models/Store.js";
+import User from "../models/User.js";
+
+const uploadSingleFile = (file: Express.Multer.File, folder: string) => {
+    return new Promise<string>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream({
+            folder,
+            resource_type: "auto",
+        }, (error, result) => {
+            if (error) reject(error);
+            else resolve(result?.secure_url as string);
+        });
+
+        uploadStream.end(file.buffer);
+    });
+};
+
+export const applyForStore = async (req: Request, res: Response) => {
+    try {
+        const existingStore = await Store.findOne({ owner: req.user._id });
+        if (existingStore) {
+            return res.status(400).json({ success: false, message: "You already have a store application" });
+        }
+
+        const { name, description } = req.body;
+        if (!name) {
+            return res.status(400).json({ success: false, message: "Store name is required" });
+        }
+
+        let logo = "";
+        if (req.file) {
+            logo = await uploadSingleFile(req.file, "gocart/stores");
+        }
+
+        const store = await Store.create({
+            owner: req.user._id,
+            name,
+            description,
+            logo,
+            status: "pending",
+        });
+
+        res.status(201).json({ success: true, data: store });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getMyStore = async (req: Request, res: Response) => {
+    try {
+        const store = await Store.findOne({ owner: req.user._id }).populate("owner", "name email");
+        if (!store) {
+            return res.status(404).json({ success: false, message: "Store not found" });
+        }
+
+        res.json({ success: true, data: store });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getAdminStores = async (req: Request, res: Response) => {
+    try {
+        const { status, page = 1, limit = 10 } = req.query;
+        const query: any = {};
+
+        if (status) query.status = status;
+
+        const total = await Store.countDocuments(query);
+        const stores = await Store.find(query)
+            .populate("owner", "name email")
+            .sort({ createdAt: -1 })
+            .skip((Number(page) - 1) * Number(limit))
+            .limit(Number(limit));
+
+        res.json({
+            success: true,
+            data: stores,
+            pagination: {
+                total,
+                page: Number(page),
+                pages: Math.ceil(total / Number(limit)),
+            },
+        });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const approveStore = async (req: Request, res: Response) => {
+    try {
+        const store = await Store.findById(req.params.storeId);
+        if (!store) {
+            return res.status(404).json({ success: false, message: "Store not found" });
+        }
+
+        store.status = "active";
+        store.rejectionReason = undefined;
+        await store.save();
+
+        const owner = await User.findByIdAndUpdate(store.owner, { role: "store_owner" }, { new: true });
+        if (owner?.clerkId) {
+            await clerkClient.users.updateUser(owner.clerkId, {
+                publicMetadata: { role: "store_owner" },
+            });
+        }
+
+        const updatedStore = await Store.findById(store._id).populate("owner", "name email");
+        res.json({ success: true, data: updatedStore });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const rejectStore = async (req: Request, res: Response) => {
+    try {
+        const { rejectionReason } = req.body;
+        if (!rejectionReason) {
+            return res.status(400).json({ success: false, message: "Rejection reason is required" });
+        }
+
+        const store = await Store.findByIdAndUpdate(req.params.storeId, {
+            status: "rejected",
+            rejectionReason,
+        }, { new: true }).populate("owner", "name email");
+
+        if (!store) {
+            return res.status(404).json({ success: false, message: "Store not found" });
+        }
+
+        res.json({ success: true, data: store });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getStoreById = async (req: Request, res: Response) => {
+    try {
+        const store = await Store.findOne({
+            _id: req.params.storeId,
+            status: "active",
+        }).populate("owner", "name");
+
+        if (!store) {
+            return res.status(404).json({ success: false, message: "Store not found" });
+        }
+
+        res.json({ success: true, data: store });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

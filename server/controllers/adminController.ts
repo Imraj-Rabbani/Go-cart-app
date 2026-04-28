@@ -2,12 +2,15 @@ import { Request,Response } from "express";
 import User from "../models/User.js";
 import Product from "../models/Products.js";
 import Order from "../models/Orders.js";
+import Store from "../models/Store.js";
 
 export const getDashboardStats = async (req: Request, res: Response)=>{
     try{
         const totalUsers = await User.countDocuments()
         const totalProducts = await Product.countDocuments()
         const totalOrders = await Order.countDocuments()
+        const totalStores = await Store.countDocuments({ status: "active" })
+        const pendingStoreRequests = await Store.countDocuments({ status: "pending" })
 
         const validOrders = await Order.find({orderStatus: {$ne: "cancelled"}})
         const totalRevenue = validOrders.reduce((sum, order)=> sum + order.totalAmount,0)
@@ -17,7 +20,7 @@ export const getDashboardStats = async (req: Request, res: Response)=>{
         res.json({
             success: true,
             data: {
-                totalUsers, totalProducts, totalOrders, totalRevenue, recentOrders
+                totalUsers, totalProducts, totalOrders, totalRevenue, recentOrders, totalStores, pendingStoreRequests
             }
         })
 

@@ -12,9 +12,7 @@ export const CATEGORIES = [
     { id: 1, name: "Men", icon: "man-outline" },
     { id: 2, name: "Women", icon: "woman-outline" },
     { id: 3, name: "Kids", icon: "happy-outline" },
-    { id: 4, name: "Shoes", icon: "footsteps-outline" },
-    { id: 5, name: "Bag", icon: "briefcase-outline" },
-    { id: 6, name: "Other", icon: "grid-outline" },
+    { id: 4, name: "Accessories", icon: "briefcase-outline" },
 ];
 
 export const PROFILE_MENU = [
@@ -38,5 +36,33 @@ export const getStatusColor = (status: string) => {
             return "bg-red-50 text-red-900";
         default:
             return "bg-gray-50 text-gray-900";
+    }
+};
+
+export const getStoreStatusColor = (status: string) => {
+    switch (status) {
+        case "pending":
+            return "bg-yellow-50";
+        case "active":
+            return "bg-green-50";
+        case "rejected":
+            return "bg-red-50";
+        default:
+            return "bg-gray-50";
+    }
+};
+
+export const getDesignStatusColor = (status: string) => {
+    switch (status) {
+        case "draft":
+            return "bg-gray-50";
+        case "submitted":
+            return "bg-yellow-50";
+        case "in_production":
+            return "bg-indigo-50";
+        case "completed":
+            return "bg-green-50";
+        default:
+            return "bg-gray-50";
     }
 };

@@ -100,7 +100,7 @@ export default function SignInScreen() {
         </TouchableOpacity>
 
         <View className="flex-row justify-center mt-6">
-          <Text className="text-gray-500">Don't have an account? </Text>
+          <Text className="text-gray-500">Don&apos;t have an account? </Text>
           <Link href="/sign-up" asChild>
             <TouchableOpacity>
               <Text className="text-gray-900 font-semibold">Sign up</Text>

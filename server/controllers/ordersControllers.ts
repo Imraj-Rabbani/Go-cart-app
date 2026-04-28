@@ -63,6 +63,7 @@ export const createOrder = async (req: Request, res: Response) => {
 
             orderItems.push({
                 product: item.product._id,
+                store: product.store || null,
                 name: (item.product as any).name,
                 quantity: item.quantity,
                 size: item.size,
@@ -138,10 +139,10 @@ export const getAllOrders = async (req: Request, res: Response) => {
         const { status, page = 1, limit = 20 } = req.query;
         const query : any = {}
 
-        if (status) query.status = status;
+        if (status) query.orderStatus = status;
         const total = await Order.countDocuments(query)
         const orders = await Order.find(query).populate("user", "name email").populate
-        ("items.product", "name").sort("-createdAt").skip((Number(page) - 1) * Number(limit))
+        ("items.product", "name").sort("-createdAt").skip((Number(page) - 1) * Number(limit)).limit(Number(limit))
 
         res.json({
             success: true,

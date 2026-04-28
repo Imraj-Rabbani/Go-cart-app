@@ -59,12 +59,26 @@ export default function Profile() {
                 {user.primaryEmailAddress?.emailAddress}
               </Text>
 
-              {/* Admin Panel */}
-              {user.publicMetadata?.role === 'admin' && (
-                <TouchableOpacity className='bg-primary py-3 px-6 rounded-full mt-4' onPress={() => router.push('/admin')}>
-                  <Text className='text-white font-bold'>Admin Panel</Text>
+              <View className='w-full mt-4'>
+                {user.publicMetadata?.role === 'user' && (
+                  <TouchableOpacity className='bg-primary py-3 px-6 rounded-full mb-3' onPress={() => router.push('/store-owner/apply')}>
+                    <Text className='text-white font-bold text-center'>Become a Seller</Text>
+                  </TouchableOpacity>
+                )}
+                {(user.publicMetadata?.role === 'store_owner' || user.publicMetadata?.role === 'user') && (
+                  <TouchableOpacity className='bg-white py-3 px-6 rounded-full mb-3 border border-gray-200' onPress={() => router.push('/store-owner')}>
+                    <Text className='text-primary font-bold text-center'>My Store</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity className='bg-white py-3 px-6 rounded-full mb-3 border border-gray-200' onPress={() => router.push('/designs')}>
+                  <Text className='text-primary font-bold text-center'>My Designs</Text>
                 </TouchableOpacity>
-              )}
+                {user.publicMetadata?.role === 'admin' && (
+                  <TouchableOpacity className='bg-primary py-3 px-6 rounded-full' onPress={() => router.push('/admin')}>
+                    <Text className='text-white font-bold text-center'>Admin Panel</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
 
             <View className='border border-gray-100 rounded-2xl p-2 bg-white shadow-sm'>

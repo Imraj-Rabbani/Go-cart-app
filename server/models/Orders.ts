@@ -3,6 +3,7 @@ import { IOrder } from "../types/index.js";
 
 const orderItemSchema = new mongoose.Schema({
     product : {type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true},
+    store: { type: mongoose.Schema.Types.ObjectId, ref: "Store", default: null },
     name: String,
     quantity: {type: Number, required: true, min:1},
     price: { type: Number, required: true},
