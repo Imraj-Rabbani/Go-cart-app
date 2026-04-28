@@ -7,15 +7,27 @@ import Header from "@/components/Header";
 import { COLORS } from "@/constants";
 import type { Order, Product } from "@/constants/types";
 import { dummyOrders } from "@/assets/assets";
+import { useAuth } from "@clerk/clerk-expo";
+import api from "@/constants/api";
 
 export default function OrderDetails() {
     const { id } = useLocalSearchParams();
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
+    const {getToken} = useAuth()
 
     const fetchOrderDetails = async () => {
-        setOrder(dummyOrders.find((order) => order._id === id) as any);
-        setLoading(false);
+        try {
+            const token = await getToken()
+            const {data} = await api.get(`/orders/${id}`,{
+                headers:{Authorization:`Bearer ${token}`}
+            })
+            setOrder(data.data)
+        } catch (error) {
+            console.error("Error fetching orders details:", error)
+        } finally {
+            setLoading(false)
+        }
     };
 
     useEffect(() => {

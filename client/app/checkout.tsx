@@ -9,10 +9,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { COLORS } from '@/constants'
 import Header from '@/components/Header'
 import { Ionicons } from '@expo/vector-icons'
+import { useAuth } from '@clerk/clerk-expo'
+import api from '@/constants/api'
 
 export default function Checkout() {
 
-    const { cartTotal } = useCart()
+    const {getToken} = useAuth()
+    const { cartTotal, clearCart } = useCart()
     const router = useRouter()
 
     const [loading, setLoading] = useState(false)
@@ -25,12 +28,25 @@ export default function Checkout() {
     const total = cartTotal + shipping
 
     const fetchAddress = async () => {
-        const addrList = dummyAddress
-        if (addrList.length > 0) {
-            const def = addrList.find((a: any) => a.isDefault) || addrList[0]
-            setSelectedAddress(def as Address)
+        try {
+            const token = await getToken()
+            const {data} = await api.get('/addresses',{
+                headers:{Authorization:'Bearer '+ token}
+            })
+            const addrList = data.data
+            if(addrList.length>0){
+                const defaultAddr = addrList.find((addr:Address)=>addr.isDefault)
+                setSelectedAddress(defaultAddr)
+            }
+        } catch (error) {
+            Toast.show({
+                type: 'error', 
+                text1: 'Error',
+                text2: 'Failed to load addresses',
+            })
+        }finally{
+            setPageLoading(false)
         }
-        setPageLoading(false)
     }
 
     const handlePlaceOrder = async () => {
@@ -55,8 +71,34 @@ export default function Checkout() {
         // Cash on delivery
         setLoading(true)
         try {
-            router.replace('/orders')
-        } finally {
+            const payload = {
+                shippingAddress : selectedAddress,
+                notes: "Place via App",
+                paymentMethod: "cash"
+            }
+            const token = await getToken()
+            const { data } = await api.post('/orders', payload, {
+                headers: { Authorization: 'Bearer ' + token }
+            })
+
+            if(data.success){
+                await clearCart()
+                Toast.show({
+                    type: 'success',
+                    text1: 'Order placed successfully',
+                    text2: 'Your order has been placed successfully',
+                })
+                router.replace('/orders')
+            }
+
+        }catch(error: any){
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: error.response.data.message || 'Failed to place order',
+            })   
+        }
+         finally {
             setLoading(false)
         }
     }

@@ -28,7 +28,7 @@ export default function AdminOrders() {
                 }
             })
             if (data.success) {
-                setOrders(data.data.orders);
+                setOrders(data.data);
             }
         } catch (error: any) {
             console.error("Failed to fetch orders:", error);

@@ -7,17 +7,12 @@ import Product from "../models/Products.js";
 // GET /api/orders
 export const getOrders = async (req: Request, res: Response) => {
     try {
-        const order = await Order.findById(req.params.id).populate("items.product", "name images")
+        const userId = req.user._id;
+        const orders = await Order.find({ user: userId })
+            .populate("items.product", "name images price")
+            .sort("-createdAt")
 
-        if(!order){
-            return res.status(404).json({ success: false, message: "Order not found" });
-        }
-
-        if(order.user.toString()!==req.user._id.toString() && req.user.role !== 'admin'){
-            return res.status(403).json({success: false, message: "Not authorized"})
-        }
-
-        res.json({ success: true, data: order });
+        res.json({ success: true, data: orders });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -146,7 +141,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
         if (status) query.status = status;
         const total = await Order.countDocuments(query)
         const orders = await Order.find(query).populate("user", "name email").populate
-        ("item.product", "name").sort("-createdAt").skip((Number(page) - 1) * Number(limit))
+        ("items.product", "name").sort("-createdAt").skip((Number(page) - 1) * Number(limit))
 
         res.json({
             success: true,
