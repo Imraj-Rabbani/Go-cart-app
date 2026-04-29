@@ -23,6 +23,7 @@ app.post('/api/clerk', express.raw({type: 'application/json'}), clerkWebhook)
 
 // Middleware
 app.use(cors())
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(clerkMiddleware())
 

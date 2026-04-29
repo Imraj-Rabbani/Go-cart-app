@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react'
 import { useCart } from '@/context/CartContext'
 import { useRouter } from 'expo-router'
 import { Address } from '@/constants/types'
-import { dummyAddress } from '@/assets/assets'
 import Toast from 'react-native-toast-message'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { COLORS } from '@/constants'
@@ -11,10 +10,11 @@ import Header from '@/components/Header'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '@clerk/clerk-expo'
 import api from '@/constants/api'
+import * as WebBrowser from 'expo-web-browser'
 
 export default function Checkout() {
 
-    const {getToken} = useAuth()
+    const { getToken } = useAuth()
     const { cartTotal, clearCart } = useCart()
     const router = useRouter()
 
@@ -22,7 +22,7 @@ export default function Checkout() {
     const [pageLoading, setPageLoading] = useState(true)
 
     const [selectedAddress, setSelectedAddress] = useState<Address | null>(null)
-    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'stripe'>('cash')
+    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bkash'>('cash')
 
     const shipping = 2.00
     const total = cartTotal + shipping
@@ -30,21 +30,21 @@ export default function Checkout() {
     const fetchAddress = async () => {
         try {
             const token = await getToken()
-            const {data} = await api.get('/addresses',{
-                headers:{Authorization:'Bearer '+ token}
+            const { data } = await api.get('/addresses', {
+                headers: { Authorization: 'Bearer ' + token }
             })
             const addrList = data.data
-            if(addrList.length>0){
-                const defaultAddr = addrList.find((addr:Address)=>addr.isDefault)
+            if (addrList.length > 0) {
+                const defaultAddr = addrList.find((addr: Address) => addr.isDefault)
                 setSelectedAddress(defaultAddr)
             }
         } catch (error) {
             Toast.show({
-                type: 'error', 
+                type: 'error',
                 text1: 'Error',
                 text2: 'Failed to load addresses',
             })
-        }finally{
+        } finally {
             setPageLoading(false)
         }
     }
@@ -59,46 +59,76 @@ export default function Checkout() {
             return
         }
 
-        if (paymentMethod === 'stripe') {
-            Toast.show({
-                type: 'info',
-                text1: 'Info',
-                text2: 'Stripe not implemented yet',
-            })
-            return
-        }
-
-        // Cash on delivery
         setLoading(true)
         try {
             const payload = {
-                shippingAddress : selectedAddress,
+                shippingAddress: selectedAddress,
                 notes: "Place via App",
-                paymentMethod: "cash"
             }
             const token = await getToken()
-            const { data } = await api.post('/orders', payload, {
-                headers: { Authorization: 'Bearer ' + token }
-            })
+            if (paymentMethod === 'bkash') {
+                const { data } = await api.post('/orders/sslcommerz/init',
+                    { ...payload, paymentMethod: "bkash" },
+                    { headers: { Authorization: 'Bearer ' + token } }
+                )
 
-            if(data.success){
-                await clearCart()
-                Toast.show({
-                    type: 'success',
-                    text1: 'Order placed successfully',
-                    text2: 'Your order has been placed successfully',
+                if (data.success && data.data?.gatewayUrl) {
+                    const result = await WebBrowser.openAuthSessionAsync(
+                        data.data.gatewayUrl,
+                        'client://payment' // must match appScheme on your backend
+                    )
+
+                    if (result.type === 'success') {
+                        const url = result.url
+
+                        if (url.includes('/payment/success')) {
+                            await clearCart()
+                            Toast.show({
+                                type: 'success',
+                                text1: 'Order placed successfully',
+                                text2: 'Your order has been placed successfully',
+                            })
+                            router.replace('/orders')
+                        } else if (url.includes('/payment/fail') || url.includes('/payment/cancelled')) {
+                            Toast.show({
+                                type: 'error',
+                                text1: 'Payment failed',
+                                text2: 'Your payment was not completed',
+                            })
+                        }
+                    } else {
+                        // result.type === 'cancel' means user closed the browser manually
+                        Toast.show({
+                            type: 'error',
+                            text1: 'Payment cancelled',
+                            text2: 'You closed the payment window',
+                        })
+                    }
+                }
+            } else {
+                const { data } = await api.post('/orders', { ...payload, paymentMethod: "cash" }, {
+                    headers: { Authorization: 'Bearer ' + token }
                 })
-                router.replace('/orders')
+
+                if (data.success) {
+                    await clearCart()
+                    Toast.show({
+                        type: 'success',
+                        text1: 'Order placed successfully',
+                        text2: 'Your order has been placed successfully',
+                    })
+                    router.replace('/orders')
+                }
             }
 
-        }catch(error: any){
+        } catch (error: any) {
             Toast.show({
                 type: 'error',
                 text1: 'Error',
                 text2: error.response.data.message || 'Failed to place order',
-            })   
+            })
         }
-         finally {
+        finally {
             setLoading(false)
         }
     }
@@ -166,18 +196,18 @@ export default function Checkout() {
                         <Text className='text-primary font-medium ml-3'>Cash on Delivery</Text>
                     </TouchableOpacity>
 
-                    {/* Stripe */}
+                    {/* bKash via SSLCommerz */}
                     <TouchableOpacity
-                        onPress={() => setPaymentMethod('stripe')}
-                        className={`flex-row items-center p-4 rounded-xl border bg-white ${paymentMethod === 'stripe' ? 'border-primary' : 'border-gray-100'}`}
+                        onPress={() => setPaymentMethod('bkash')}
+                        className={`flex-row items-center p-4 rounded-xl border bg-white ${paymentMethod === 'bkash' ? 'border-primary' : 'border-gray-100'}`}
                     >
-                        <View className={`w-5 h-5 rounded-full border-2 mr-3 items-center justify-center ${paymentMethod === 'stripe' ? 'border-primary' : 'border-gray-300'}`}>
-                            {paymentMethod === 'stripe' && (
+                        <View className={`w-5 h-5 rounded-full border-2 mr-3 items-center justify-center ${paymentMethod === 'bkash' ? 'border-primary' : 'border-gray-300'}`}>
+                            {paymentMethod === 'bkash' && (
                                 <View className='w-2.5 h-2.5 rounded-full bg-primary' />
                             )}
                         </View>
                         <Ionicons name='card-outline' size={20} color={COLORS.primary} />
-                        <Text className='text-primary font-medium ml-3'>Pay with Stripe</Text>
+                        <Text className='text-primary font-medium ml-3'>Pay with bKash</Text>
                     </TouchableOpacity>
                 </View>
 
